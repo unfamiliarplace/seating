@@ -68,7 +68,7 @@ def get_offset(tiers: list[list[str]]) -> int:
     return max(MIN_OFFSET, length // OFFSET_PROPORTION)
 
 def get_row_width(tiers: list[list[str]]) -> int:
-    return (round(get_longest_name_length(tiers) * 3.5)) + (len(tiers) * (get_offset(tiers)))
+    return (round(get_longest_name_length(tiers) * 3.75)) + (len(tiers) * (get_offset(tiers)))
 
 def get_start_offset(base: int, i: int, n: int, reverse: bool=False) -> int:
     if not reverse:
@@ -132,10 +132,15 @@ def print_front_at_top(tiers: list[list[str]]) -> None:
 def run() -> None:
     path = choose_names_file()
     names = get_names(path)
-    random.shuffle(names)
-    tiers = get_tiers(names)
-    clear()
-    print_front_at_top(tiers)
+
+    choice = ''
+    while choice != 'Q':
+        random.shuffle(names)
+        tiers = get_tiers(names)
+        clear()
+        print_front_at_top(tiers)
+
+        choice = input('Enter to rerun or Q to quit: ').upper().strip()
 
 if __name__ == '__main__':
     run()
