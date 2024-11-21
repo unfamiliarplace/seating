@@ -68,7 +68,11 @@ def get_offset(tiers: list[list[str]]) -> int:
     return max(MIN_OFFSET, length // OFFSET_PROPORTION)
 
 def get_row_width(tiers: list[list[str]]) -> int:
-    return (round(get_longest_name_length(tiers) * 3.75)) + (len(tiers) * (get_offset(tiers)))
+    w_names = get_longest_name_length(tiers) * 2
+    w_offsets = (get_offset(tiers) * sum(range(len(tiers) - 1)))
+    return w_names + w_names + MIN_OFFSET
+
+    # return MIN_OFFSET + (get_longest_name_length(tiers) * 2) + (get_offset(tiers) * sum(range(len(tiers) - 1)))
 
 def get_start_offset(base: int, i: int, n: int, reverse: bool=False) -> int:
     if not reverse:
