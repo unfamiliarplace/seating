@@ -50,7 +50,11 @@ def get_tiers(names: list[str]) -> list[list[str]]:
     return tiers
 
 def format_now() -> str:
-    return datetime.datetime.now().strftime('%A, %B %-d, %Y')
+    now = datetime.datetime.now()
+    
+    # Seems to be the only pre-3.13 way to get no zero padding
+    d = now.strftime('%d').lstrip('0')
+    return now.strftime('%A, %B [], %Y').replace('[]', d)
 
 def clear() -> None:
     os.system('cls' if os.name == 'nt' else 'clear')
