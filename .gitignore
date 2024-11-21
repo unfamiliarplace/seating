@@ -1,6 +1,6 @@
 *DS_STORE*
 src/names/*
-!src/names/_test_names.txt
+!src/names/_test_names*.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

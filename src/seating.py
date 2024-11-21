@@ -3,7 +3,8 @@ import random
 import datetime
 import os
 
-OFFSET = 3
+MIN_OFFSET = 3
+OFFSET_PROPORTION = 3
 
 def choose_names_file() -> Path:
     choices = {}
@@ -51,7 +52,7 @@ def get_tiers(names: list[str]) -> list[list[str]]:
 
 def format_now() -> str:
     now = datetime.datetime.now()
-    
+
     # Seems to be the only pre-3.13 way to get no zero padding
     d = now.strftime('%d').lstrip('0')
     return now.strftime('%A, %B [], %Y').replace('[]', d)
@@ -59,18 +60,25 @@ def format_now() -> str:
 def clear() -> None:
     os.system('cls' if os.name == 'nt' else 'clear')
 
-def get_row_width(tiers: list[list[str]]) -> int:
-    width = len(''.join(name for t in tiers for name in t)) + OFFSET
-    return width - (OFFSET * (2 * (len(tiers) + 1)))
+def get_longest_name_length(tiers: list[list[str]]) -> int:
+    return len(max((name for t in tiers for name in t), key=len))
 
-def get_start_offset(i: int, n: int, reverse: bool=False) -> int:
+def get_offset(tiers: list[list[str]]) -> int:
+    length = get_longest_name_length(tiers)
+    return max(MIN_OFFSET, length // OFFSET_PROPORTION)
+
+def get_row_width(tiers: list[list[str]]) -> int:
+    return (round(get_longest_name_length(tiers) * 3.5)) + (len(tiers) * (get_offset(tiers)))
+
+def get_start_offset(base: int, i: int, n: int, reverse: bool=False) -> int:
     if not reverse:
-        return OFFSET * (n - (i + 1))
+        return base * (n - (i + 1))
     else:
-        return OFFSET * i
+        return base * (i + 1)
 
 def print_tiers(tiers: list[list[str]], reverse: bool=False) -> None:
     w = get_row_width(tiers)
+    base_offset = get_offset(tiers)
 
     for (i, tier) in enumerate(tiers):
         if len(tier) == 1:
@@ -79,7 +87,7 @@ def print_tiers(tiers: list[list[str]], reverse: bool=False) -> None:
         else:
             L, R = tier
 
-            start_offset = get_start_offset(i, len(tiers), reverse)
+            start_offset = get_start_offset(base_offset, i, len(tiers), reverse)
             mid_offset = w - len(L) - len(R) - (start_offset * 2)
             
             print(' ' * start_offset, end='')
@@ -113,7 +121,7 @@ def print_front_at_top(tiers: list[list[str]]) -> None:
     print('Front'.center(w))
     print()
 
-    # Swap a possible lone name to back
+    # Swap a possible lone name from start to end
     tiers[0], tiers[-1] = tiers[-1], tiers[0]
     print_tiers(tiers, reverse=True)
             
