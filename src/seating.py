@@ -70,7 +70,7 @@ def get_offset(tiers: list[list[str]]) -> int:
 def get_row_width(tiers: list[list[str]]) -> int:
     w_names = get_longest_name_length(tiers) * 2
     w_offsets = (get_offset(tiers) * sum(range(len(tiers) - 1)))
-    return w_names + w_names + MIN_OFFSET
+    return w_names + w_offsets + MIN_OFFSET
 
     # return MIN_OFFSET + (get_longest_name_length(tiers) * 2) + (get_offset(tiers) * sum(range(len(tiers) - 1)))
 
