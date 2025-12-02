@@ -3,6 +3,7 @@ import random
 import datetime
 import os
 import termcolor
+import string
 
 MIN_OFFSET = 3
 OFFSET_PROPORTION = 3
@@ -135,8 +136,10 @@ def create_name_grid(names: list[str], name_to_gender: dict[str, str], grid: tup
     return name_grid
 
 def print_name_grid(name_grid: list[list[str]]) -> None:
+    printable = set(string.printable)
 
-    w = len(name_grid[0][0]) * len(name_grid[0])
+    # lol. improve by saving length somewhere... maybe class-ify this
+    w = len(list(c for c in name_grid[0][0] if c in printable)) * len(name_grid[0])
 
     print()
     print('Front'.center(w))
