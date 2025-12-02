@@ -36,19 +36,20 @@ def parse_data(path: Path) -> list[list[tuple[str]], list[list[bool]]]:
         state = 0
         for line in filter(None, (line.strip() for line in f.readlines())):
 
-            k, v = line.split('::')
-            if
-            if k == 'names':
-                state = 1
-            elif k == 'grid':
-                state = 2
+            if '::' in line:
+                k, v = line.split('::')
+                
+                if k == 'names':
+                    state = 1
+                elif k == 'grid':
+                    state = 2
+            else:
+                if state == 1:
+                    names.append(line.split(':'))
 
-            if state == 1:
-                names.append(line)
-
-            elif state == 2:
-                ints = list(bool(int(c)) for c in line.replace(' ', ''))
-                grid.append(ints)
+                elif state == 2:
+                    ints = list(bool(int(c)) for c in line.replace(' ', ''))
+                    grid.append(ints)
 
     return names, grid
 
@@ -106,8 +107,10 @@ def create_name_grid(names: list[str], grid: tuple[list[str]]) -> list[list]:
         name_grid.append(new_row)
 
     for (name, (row, col)) in zip(names, positions):
-        name_grid[row][col] = name.center(length)
-    
+        # colour = 'blue' if name[1] == 'M' else 'pink'
+        # name_grid[row][col] = lambda: termcolor.colored(name, colour)
+        name_grid[row][col] = name[0].center(length)
+
     return name_grid
 
 def print_name_grid(name_grid: list[list[str]]) -> None:
