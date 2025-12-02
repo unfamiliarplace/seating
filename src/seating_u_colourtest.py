@@ -8,6 +8,12 @@ MIN_OFFSET = 3
 OFFSET_PROPORTION = 3
 DEFAULT_GENDER = 'C'
 
+GENDER_TO_COLOUR = {
+    'M' : 'blue',
+    'F' : 'magenta',
+    DEFAULT_GENDER : 'white'
+}
+
 def choose_names_file() -> Path:
     choices = {}
 
@@ -110,7 +116,7 @@ def get_grid_positions(grid: list[list[int]]) -> set[tuple[bool]]:
                 positions.add((i_row, i_col))
     return positions
 
-def create_name_grid(names: list[str], grid: tuple[list[str]]) -> list[list]:
+def create_name_grid(names: list[str], name_to_gender: dict[str, str], grid: tuple[list[str]]) -> list[list]:
     positions = list(get_grid_positions(grid))
     random.shuffle(positions)
 
@@ -123,13 +129,12 @@ def create_name_grid(names: list[str], grid: tuple[list[str]]) -> list[list]:
         name_grid.append(new_row)
 
     for (name, (row, col)) in zip(names, positions):
-        # colour = 'blue' if name[1] == 'M' else 'pink'
-        # name_grid[row][col] = lambda: termcolor.colored(name, colour)
-        name_grid[row][col] = name.center(length)
+        colour = GENDER_TO_COLOUR[name_to_gender[name]]
+        name_grid[row][col] = termcolor.colored(name.center(length), colour)
 
     return name_grid
 
-def print_name_grid(name_grid: list[list[str]], name_to_gender: dict[str, str]) -> None:
+def print_name_grid(name_grid: list[list[str]]) -> None:
 
     w = len(name_grid[0][0]) * len(name_grid[0])
 
@@ -153,8 +158,8 @@ def run() -> None:
         clear()
 
         random.shuffle(names)
-        name_grid = create_name_grid(names, grid)
-        print_name_grid(name_grid, name_to_gender)
+        name_grid = create_name_grid(names, name_to_gender, grid)
+        print_name_grid(name_grid)
 
         choice = input('Enter to rerun or Q to quit: ').upper().strip()
 
