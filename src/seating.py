@@ -114,10 +114,10 @@ class SeatingPlan:
     def __str__(self: SeatingPlan):
         w_col = Utilities.get_longest_length(s.name for s in self.c.students)
         w_row = w_col * self.layout.get_n_cols()
-        empty = " " * w_col
+        empty = ' ' * w_col
 
-        s = "\n" + Utilities.format_now().center(w_row) + "\n\n" 
-        s += 'Front'.center(w_row) + "\n"
+        s = '\n' + Utilities.format_now().center(w_row) + '\n\n'
+        s += 'Front'.center(w_row) + '\n\n'
 
         for row in self.layout:
             line = ""
@@ -136,7 +136,7 @@ class SeatingPlan:
             
             s += line + '\n'
 
-        s += 'Back'.center(w_row) + "\n"
+        s += '\n' + 'Back'.center(w_row) + '\n'
         return s
         
 class Class:
