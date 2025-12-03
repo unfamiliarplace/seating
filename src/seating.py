@@ -2,9 +2,18 @@ from pathlib import Path
 import random
 import datetime
 import os
+import termcolor
+import string
 
 MIN_OFFSET = 3
 OFFSET_PROPORTION = 3
+DEFAULT_GENDER = 'C'
+
+GENDER_TO_COLOUR = {
+    'M' : 'blue',
+    'F' : 'magenta',
+    DEFAULT_GENDER : 'white'
+}
 
 def choose_names_file() -> Path:
     choices = {}
@@ -27,28 +36,45 @@ def choose_names_file() -> Path:
 
         return choices[sorted(choices, reverse=True)[n - 1]]
 
-def get_names(path: Path) -> list[str]:
+def parse_data(path: Path) -> tuple[list[str], dict[str, str], list[list[bool]]]:
+    """
+    Return:
+      1. A list of names
+      2. A dictionary of name to gender
+      3. A list of lists of booleans representing placeable grid positions
+    """
     names = []
+    name_to_gender = {}
+    grid = []
+
     with open(path, 'r', encoding='utf-8') as f:
+        state = 0
         for line in filter(None, (line.strip() for line in f.readlines())):
-            names.append(line)
-    return names
 
-def get_tiers(names: list[str]) -> list[list[str]]:
-    tiers = []
+            if '::' in line:
+                k, v = line.split('::')
+                
+                if k == 'names':
+                    state = 1
+                elif k == 'grid':
+                    state = 2
+            else:
+                if state == 1:
+                    name, *parts = line.split(':')
 
-    if len(names) % 2:
-        tiers.append([names[0]])
-        names = names[1:]
-    else:
-        tiers.append([names[0], names[1]])
-        names = names[2:]
+                    if parts:
+                        gender, *parts = parts
+                    else:
+                        gender = DEFAULT_GENDER
 
-    while names:
-        tiers.append([names[0], names[1]])
-        names = names[2:]
+                    names.append(name)
+                    name_to_gender[name] = gender
 
-    return tiers
+                elif state == 2:
+                    ints = list(bool(int(c)) for c in line.replace(' ', ''))
+                    grid.append(ints)
+
+    return names, name_to_gender, grid
 
 def format_now() -> str:
     now = datetime.datetime.now()
@@ -60,15 +86,18 @@ def format_now() -> str:
 def clear() -> None:
     os.system('cls' if os.name == 'nt' else 'clear')
 
-def get_longest_name_length(tiers: list[list[str]]) -> int:
+def get_longest_name_length(names: list[str]) -> int:
+    return len(max(names, key=len))
+
+def get_longest_name_length_from_tiers(tiers: list[list[str]]) -> int:
     return len(max((name for t in tiers for name in t), key=len))
 
 def get_offset(tiers: list[list[str]]) -> int:
-    length = get_longest_name_length(tiers)
+    length = get_longest_name_length_from_tiers(tiers)
     return max(MIN_OFFSET, length // OFFSET_PROPORTION)
 
 def get_row_width(tiers: list[list[str]]) -> int:
-    w_names = get_longest_name_length(tiers) * 2
+    w_names = get_longest_name_length_from_tiers(tiers) * 2
     w_offsets = (get_offset(tiers) * sum(range(len(tiers) - 1)))
     return w_names + w_offsets + MIN_OFFSET
 
@@ -80,69 +109,60 @@ def get_start_offset(base: int, i: int, n: int, reverse: bool=False) -> int:
     else:
         return base * (i + 1)
 
-def print_tiers(tiers: list[list[str]], reverse: bool=False) -> None:
-    w = get_row_width(tiers)
-    base_offset = get_offset(tiers)
+def get_grid_positions(grid: list[list[int]]) -> set[tuple[bool]]:
+    positions = set()
+    for (i_row, row) in enumerate(grid):
+        for (i_col, col) in enumerate(row):
+            if col:
+                positions.add((i_row, i_col))
+    return positions
 
-    for (i, tier) in enumerate(tiers):
-        if len(tier) == 1:
-            print(tier[0].center(w))
+def create_name_grid(names: list[str], name_to_gender: dict[str, str], grid: tuple[list[str]]) -> list[list]:
+    positions = list(get_grid_positions(grid))
+    random.shuffle(positions)
 
-        else:
-            L, R = tier
+    length = get_longest_name_length(names)
+    empty = " " * length
 
-            start_offset = get_start_offset(base_offset, i, len(tiers), reverse)
-            mid_offset = w - len(L) - len(R) - (start_offset * 2)
-            
-            print(' ' * start_offset, end='')
-            print(L, end='')
-            print(' ' * mid_offset, end='')
-            print(R)
+    name_grid = []
+    for row in grid:
+        new_row = list(empty for _ in row)
+        name_grid.append(new_row)
 
-def print_back_at_top(tiers: list[list[str]]) -> None:
+    for (name, (row, col)) in zip(names, positions):
+        colour = GENDER_TO_COLOUR[name_to_gender[name]]
+        name_grid[row][col] = termcolor.colored(name.center(length), colour)
 
-    w = get_row_width(tiers)
+    return name_grid
 
-    print()
-    print(format_now().center(w))
-    print()
-    print('Back'.center(w))
-    print()
+def print_name_grid(name_grid: list[list[str]]) -> None:
+    printable = set(string.printable)
 
-    print_tiers(tiers, reverse=False)
-            
+    # lol. improve by saving length somewhere... maybe class-ify this
+    w = len(list(c for c in name_grid[0][0] if c in printable)) * len(name_grid[0])
+
     print()
     print('Front'.center(w))
     print()
 
-def print_front_at_top(tiers: list[list[str]]) -> None:
-
-    w = get_row_width(tiers)
-
-    print()
-    print(format_now().center(w))
-    print()
-    print('Front'.center(w))
-    print()
-
-    # Swap a possible lone name from start to end
-    tiers[0], tiers[-1] = tiers[-1], tiers[0]
-    print_tiers(tiers, reverse=True)
-            
-    print()
+    for row in name_grid:
+        print(' '.join(row))
+        print()
+    
     print('Back'.center(w))
     print()
 
 def run() -> None:
     path = choose_names_file()
-    names = get_names(path)
+    names, name_to_gender, grid = parse_data(path)
 
     choice = ''
     while choice != 'Q':
-        random.shuffle(names)
-        tiers = get_tiers(names)
         clear()
-        print_front_at_top(tiers)
+
+        random.shuffle(names)
+        name_grid = create_name_grid(names, name_to_gender, grid)
+        print_name_grid(name_grid)
 
         choice = input('Enter to rerun or Q to quit: ').upper().strip()
 
